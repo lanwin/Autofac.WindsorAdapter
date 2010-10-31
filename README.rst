@@ -11,3 +11,11 @@ Current state
 For now this is a toy project where i try to find out if this could work.
 
 Its able to send and receive messages via Rhino.ESB and inject Autofac dependencies.
+
+Example
+==============
+var builder = new ContainerBuilder();
+var container = builder.Build();
+
+var windsor = WindsorAdapter.Create(container);
+// pass this instance to your component
