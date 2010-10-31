@@ -1,5 +1,6 @@
 using System;
 using System.Collections;
+using Autofac.Builder;
 using Castle.Core;
 
 namespace Autofac.WindsorAdapter
@@ -24,9 +25,24 @@ namespace Autofac.WindsorAdapter
 
             var builder = new ContainerBuilder();
 
-            var registration = builder.RegisterType(componentModel.Implementation)
-                .As(componentModel.Service)
-                .Named(key, componentModel.Service);
+            if(componentModel.Service.IsGenericTypeDefinition)
+            {
+                Register(componentModel, key, builder.RegisterGeneric(componentModel.Implementation));
+            }
+            else
+            {
+                Register(componentModel, key, builder.RegisterType(componentModel.Implementation));
+            }
+
+            builder.Update(_container);
+        }
+
+        private void Register<T, Tc>(ComponentModel componentModel, string key, IRegistrationBuilder<object, Tc, T> registration) where Tc : 
+            ReflectionActivatorData
+        {
+            registration.As(componentModel.Service);
+            registration.Named(key,componentModel.Service);
+            
 
             foreach(DictionaryEntry property in componentModel.CustomDependencies)
             {
@@ -43,17 +59,15 @@ namespace Autofac.WindsorAdapter
             switch(componentModel.LifestyleType)
             {
                 case LifestyleType.Transient:
-                    registration.InstancePerDependency();
-                    break;
+                registration.InstancePerDependency();
+                break;
                 case LifestyleType.Undefined:
                 case LifestyleType.Singleton:
-                    registration.SingleInstance();
-                    break;
+                registration.SingleInstance();
+                break;
                 default:
-                    throw new ArgumentOutOfRangeException();
+                throw new ArgumentOutOfRangeException();
             }
-
-            builder.Update(_container);
         }
     }
 }
