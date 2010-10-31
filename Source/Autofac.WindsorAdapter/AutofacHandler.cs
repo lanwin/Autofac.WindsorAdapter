@@ -7,8 +7,8 @@ namespace Autofac.WindsorAdapter
 {
     internal class AutofacHandler : IHandler
     {
-        private readonly ComponentModel _model;
         private readonly IContainer _container;
+        private readonly ComponentModel _model;
 
         public AutofacHandler(ComponentModel model, IContainer container)
         {
@@ -37,7 +37,10 @@ namespace Autofac.WindsorAdapter
             throw new NotImplementedException();
         }
 
-        public bool CanResolve(CreationContext context, ISubDependencyResolver contextHandlerResolver, ComponentModel model, DependencyModel dependency)
+        public bool CanResolve(CreationContext context,
+            ISubDependencyResolver contextHandlerResolver,
+            ComponentModel model,
+            DependencyModel dependency)
         {
             throw new NotImplementedException();
         }
@@ -49,13 +52,13 @@ namespace Autofac.WindsorAdapter
 
         public object Resolve(CreationContext context)
         {
-            return _container.Resolve(_model.Service);
+            return _container.Resolve(PrepareServiceType(context));
         }
 
         public object TryResolve(CreationContext context)
         {
             object service;
-            _container.TryResolve(_model.Service, out service);
+            _container.TryResolve(PrepareServiceType(context), out service);
             return service;
         }
 
@@ -97,5 +100,13 @@ namespace Autofac.WindsorAdapter
         public Type Service { get; private set; }
 
         public event HandlerStateDelegate OnHandlerStateChanged;
+
+        private Type PrepareServiceType(CreationContext context)
+        {
+            var service = _model.Service;
+            if(context.GenericArguments != null && context.GenericArguments.Length > 0)
+                service = service.MakeGenericType(context.GenericArguments);
+            return service;
+        }
     }
 }
